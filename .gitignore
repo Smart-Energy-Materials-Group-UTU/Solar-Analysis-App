@@ -1,8 +1,6 @@
 # Data files (ignore large or non-essential data)
 Data/
 
-Data/8 Pixel Device
-
 # Device-related PDFs
 Devices/
 
@@ -19,7 +17,7 @@ Plots/
 Pics/
 
 # Project code (ignore compiled Python files)
-Project Code/__pycache__/
+Project Code/__pycache___/
 
 # Generated reports (can be deleted)
 Reports/
@@ -40,5 +38,12 @@ Work Diary.docx
 # Ignore all log files
 *.log
 
-# Ignore .pyc files
+# Ignore .pyc and pyo files
 *.pyc
+*.pyo
+# Ignore launch files
+launch.bat
+launch.sh
+
+# Ignore README.md
+README.md

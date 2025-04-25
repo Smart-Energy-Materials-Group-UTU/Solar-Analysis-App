@@ -134,7 +134,7 @@ class SolarAnalysisApp:
         self.date_frame = tk.Frame(self.root)
         tk.Label(
             self.date_frame, 
-            text="Experiment Date (DD/MM/YYYY):", 
+            text="Measurement Date (DD/MM/YYYY):", 
             font=("Arial", 10)
         ).pack(side="left", padx=5)
 
