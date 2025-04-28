@@ -20,22 +20,29 @@ plots_dir = os.path.join(base_dir, "Plots")
 os.makedirs(plots_dir, exist_ok=True)
 
 
-class sample_analyzer:
-    """Class to handle J-V curve processing and photovoltaic analysisof one sample of 2-Pixel data."""
+class TwoPixelSampleAnalyzer:
+    """
+    Processes J–V measurement curve data for a single sample from 2-pixel Excel sheets.
+
+    Responsibilities:
+    - Load and clean data from the specified sheet and its paired reverse/forward sheet if provided.
+    - Validate that each DataFrame contains the required J–V and P–V columns with non-null values.
+    - Generate J–V/P–V plots and calculate photovoltaic performance metrics (e.g., PCE, FF, Jsc, Voc, HI).
+    """
     
     def __init__(self, file_path, sheet_name, next_sheet_name=None):
-        self.file_path = file_path
-        self.sheet_name = sheet_name
-        self.data = self._load_data(sheet_name)
-        self.df_valid = self._validate_data(self.data)
+        self.file_path = file_path # File path of the selected excel file
+        self.sheet_name = sheet_name # The selected sheet name in the excel file
+        self.data = self._load_data(sheet_name) # Loading the data
+        self.df_valid = self._validate_data(self.data) # Checking if the sheet contains valid data
 
-        self.data2 = None
-        self.df2_valid = None
+        self.data2 = None # Setting the dataframe for the paired sheet None
+        self.df2_valid = None # Setting the condition of the dataframe for the paired  sheet None
 
-        if next_sheet_name is not None:
-            self.next_sheet_name=next_sheet_name
-            self.data2 = self._load_data(next_sheet_name)
-            self.df2_valid =self._validate_data(self.data2)
+        if next_sheet_name is not None: # Checking whether the paired sheet name is provided
+            self.next_sheet_name=next_sheet_name # Setting the name of th paired sheet to a variable
+            self.data2 = self._load_data(next_sheet_name) # Acquiring the data from the paired sheet
+            self.df2_valid =self._validate_data(self.data2) # Checking the validity of the data stored in the paired sheet
 
     def _load_data(self,sheet_name):
         """Load Excel data from the specified sheet."""
@@ -127,7 +134,7 @@ class sample_analyzer:
         bbox_to_anchor=(0.5, 1.2),  # Adjust legend position
         fontsize=9,  # Smaller font size for legend
         borderpad=0.7,  # Reduce padding inside the legend box
-        frameon=False,  # Remove legend border (optional)
+        frameon=False,  # Remove legend border
         ncol=num_columns  # Split into two rows
         )
 
@@ -239,12 +246,12 @@ class sample_analyzer:
         # Check if the first dataset is valid
         if self.df_valid:
             table[0].append("Forward Scan" if "-fw" in self.sheet_name else "Reverse Scan")
-            active_area, pce, max_voltage, max_current, mA_at_zero_voltage, V_at_zero_current, fill_factor, R_sh, R_s = sample_analyzer.extract_performance_data(self.data)
+            active_area, pce, max_voltage, max_current, mA_at_zero_voltage, V_at_zero_current, fill_factor, R_sh, R_s = TwoPixelSampleAnalyzer.extract_performance_data(self.data)
         
         # Check if the second dataset is valid
         if self.df2_valid:
             table[0].append("Forward Scan" if "-fw" in self.next_sheet_name else "Reverse Scan")
-            active_area2, pce2, max_voltage2, max_current2, mA_at_zero_voltage2, V_at_zero_current2, fill_factor2, R_sh2, R_s2 = sample_analyzer.extract_performance_data(self.data2)
+            active_area2, pce2, max_voltage2, max_current2, mA_at_zero_voltage2, V_at_zero_current2, fill_factor2, R_sh2, R_s2 = TwoPixelSampleAnalyzer.extract_performance_data(self.data2)
        
         # Populate the table dynamically
         params = [
@@ -270,18 +277,35 @@ class sample_analyzer:
     
 @dataclass
 class MeasurementResults:
+    """
+    Data container for photovoltaic measurement results from both scan directions.
+
+    Attributes:
+        fw (List[float]): Numeric results collected during the forward scan.
+        rv (List[float]): Numeric results collected during the reverse scan.
+        all (List[float]): Combined list of forward and reverse scan values for aggregate analysis.
+    """
+
     fw: List[float]
     rv: List[float]
     all: List[float]
 
 
-class measurement_analyzer:
-    """Class to analyze whole PV measurements for 2-Pixel data."""
+class TwoPixelMeasurementAnalyzer:
+    """
+    Parses and summarizes photovoltaic measurement data from a 2-pixel Excel file.
+
+    Responsibilities:
+    - Load the Excel workbook and identify all measurement sheets.
+    - For each sheet, compute key solar cell parameters (Jsc, Voc, FF, PCE).
+    - Segregate forward and reverse scan data and aggregate combined results.
+    - Provide processed data for boxplot generation.
+    """
     
     def __init__(self, file_path: str):
-        self.file_path = file_path
-        self.xls = pd.ExcelFile(self.file_path)
-        self.sheets = self.xls.sheet_names
+        self.file_path = file_path # The file path of the selected file
+        self.xls = pd.ExcelFile(self.file_path) # Reading the selected file
+        self.sheets = self.xls.sheet_names # Acquiring the sheet names from the selected file
         
         # Initialize structured results storage
         self.jsc = MeasurementResults([], [], [])  # Short-circuit current density
@@ -294,6 +318,7 @@ class measurement_analyzer:
     
     def _analyze_sheets(self):
         """Process all sheets in the Excel file."""
+
         for sheet in self.sheets:
             df = pd.read_excel(self.xls, sheet_name=sheet)
             
@@ -375,8 +400,7 @@ class measurement_analyzer:
         
         plt.figure(figsize=(6, 4))
 
-        '''        # Create a black-and-white boxplot
-        values = fw_values + rv_values'''
+        # Create a black-and-white boxplot
         all_values = fw_values + rv_values
 
         sns.boxplot(data=all_values, 
@@ -424,18 +448,25 @@ class measurement_analyzer:
         print(f"Saved PCE boxplot: {plot_path}")
         return plot_path
     
-class eight_pixel_data_analyzer:
+class EightPixelDataAnalyzer:
+
+    """
+    Parses and analyzes J–V and performance CSV files for a single 8-pixel sample.
+
+    Responsibilities:
+    - Read raw J–V data file, clean lines, extract metadata, and split bidirectional scans.
+    - Validate and transform voltage/current data into pandas DataFrames.
+    - Read performance CSV, parse MPP, Voc, Jsc, FF, PCE, and compute series/shunt resistances.
+    - Provide accessors for metadata, raw JV DataFrames, and generate J–V/P–V plots.
+    """
 
     def __init__(self, jv_data_path, performance_data_path, sample, px):
-        """
-        Initialize the parser with a file path.
-        Extracts metadata and measurement data upon initialization.
-        """
-        self.sample = sample
-        self.px = px
-        self.jv_data_path = jv_data_path
-        self.performance_data_path = performance_data_path
+        self.sample = sample # The Sample name
+        self.px = px # The Pixel Number
+        self.jv_data_path = jv_data_path # The file path of the J_V csv file
+        self.performance_data_path = performance_data_path # The file path of the performance data csv file
 
+        # Placeholder for all extracted metadata fields
         self.metadata = {
             "start_time": None,
             "sample_area": None,
@@ -446,13 +477,14 @@ class eight_pixel_data_analyzer:
             "ir_temperature": None,
             "light_intensity": None
         }
-
+        
+        # DataFrames for split scans
         self.df_1 = None
         self.df_2 = None
-        self._parse_file()
-        self._validate_data()
-        self._modify_data()
-        self.get_performance_data()
+        self._parse_file() # Parse header & data sections from the raw JV file
+        self._validate_data() # Validate that df_1/df_2 contain actual data
+        self._modify_data() # Convert raw currents to densities and filter
+        self.get_performance_data() # Load performance CSV and extract PV parameters
     
     @staticmethod
     def _clean_line(line):
@@ -460,6 +492,7 @@ class eight_pixel_data_analyzer:
         Remove unwanted characters and trailing whitespace from a line.
         Handles encoding issues and formatting inconsistencies.
         """
+        # Normalize non-breaking spaces and tabs for consistent parsing
         return line.replace('\xa0', ' ').replace('\t', ' ').strip()
 
     def _parse_file(self):
@@ -471,6 +504,7 @@ class eight_pixel_data_analyzer:
             with open(self.jv_data_path, encoding='latin1') as f:
                 lines = [self._clean_line(line) for line in f]
         except Exception as e:
+            # If file can’t be read (encoding issue, missing file), abort parsing
             print(f"❌ Failed to read file {self.jv_data_path}: {e}")
             return
 
@@ -482,19 +516,20 @@ class eight_pixel_data_analyzer:
         Extract metadata fields from header lines.
         Each metadata value is identified using specific string patterns and regex.
         """
+        # Scan every header line for known metadata markers
         for line in lines:
-            if "#start_time:" in line:
+            if "#start_time:" in line: # Extract the start time
                 self.metadata["start_time"] = line.split(":", 1)[1].strip()
-            elif "#Sample area:" in line:
+            elif "#Sample area:" in line: # Extract the sample area
                 match = re.search(r"([\d.]+)", line)
                 self.metadata["sample_area"] = float(match.group(1)) if match else None
-            elif "#start_voltage:" in line:
+            elif "#start_voltage:" in line: # Extract the starting voltage
                 match = re.search(r"([-+]?[0-9]*\.?[0-9]+)", line)
                 self.metadata["start_voltage"] = float(match.group(1)) if match else None
-            elif "#stop_voltage:" in line:
+            elif "#stop_voltage:" in line: # Extract the stop voltage
                 match = re.search(r"([-+]?[0-9]*\.?[0-9]+)", line)
                 self.metadata["stop_voltage"] = float(match.group(1)) if match else None
-            elif "#sweep_speed:" in line or "#Scan rate:" in line:  # handle both cases
+            elif "#sweep_speed:" in line or "#Scan rate:" in line: # Extract the sweep speed
                 match = re.search(r"([-+]?[0-9]*\.?[0-9]+)", line)
                 self.metadata["sweep_speed"] = float(match.group(1)) if match else None
             elif "#direction:" in line:
@@ -513,10 +548,10 @@ class eight_pixel_data_analyzer:
                 self.metadata["direction"] = direction_map.get(direction_num, None)
                 self.direction = self.metadata["direction"]  # Description (string)
                 self.direction_num = direction_num           # Number (0, 1, 2, or 3)
-            elif "##IR temperature [0]:" in line:
+            elif "##IR temperature [0]:" in line: # Extract the Infra Red temperature
                 match = re.findall(r"[-+]?[0-9]*\.?[0-9]+", line)
                 self.metadata["ir_temperature"] = [float(x) for x in match[1:]]
-            elif "##Light intensity" in line:
+            elif "##Light intensity" in line: # Extract the light intensity
                 match = re.findall(r"[-+]?[0-9]*\.?[0-9]+", line)
                 self.metadata["light_intensity"] = [float(x) for x in match]
 
@@ -527,6 +562,7 @@ class eight_pixel_data_analyzer:
         then parses into a DataFrame using flexible delimiters.
         """
 
+        # Find the first line containing both ‘voltage’ and ‘current’ headers
         header_keywords = ['voltage', 'current']
 
         data_start_index = next(
@@ -541,6 +577,7 @@ class eight_pixel_data_analyzer:
         data_block = "\n".join(lines[data_start_index:])
 
         try:
+            # For bidirectional scans, split the DF at NaN row
             df = pd.read_csv(StringIO(data_block), sep=r'\s+|,', engine='python', names=['Voltage (V)', 'Current (mA)'])
 
             if self.direction_num in [2,3]:
@@ -552,6 +589,7 @@ class eight_pixel_data_analyzer:
                     self.df_1 = df.iloc[:split_idx].dropna()
                     self.df_2 = df.iloc[split_idx+1:].dropna()
                 else:
+                    # Warn if no NaN marker (unexpected format) or parsing fails
                     print(f"⚠️ No NaN marker found for direction {self.direction_num} in {self.jv_data_path}")
                     self.df = df.dropna()
             else:
@@ -580,6 +618,8 @@ class eight_pixel_data_analyzer:
 
         # Read the CSV file
         df = pd.read_csv(self.performance_data_path, encoding='latin1', sep=';')
+
+        # Locate the '#Vmpp' marker row and parse comma-separated values
         vmpp_index = df[df.iloc[:, 0].str.contains('#Vmpp', na=False)].index[0]
 
         def parse_parameters(row_offset):
@@ -588,6 +628,7 @@ class eight_pixel_data_analyzer:
             return params
 
         def assign_metrics(prefix, params):
+            # assign_metrics: map parsed values to attributes (mpp_voltage, jsc, pce, etc.)
             sample_area = self.metadata["sample_area"]
             setattr(self, f'{prefix}_mpp_voltage', round(float(params[0]), 3))
             setattr(self, f'{prefix}_mpp_current_density', round(float(params[1]) / sample_area * -1, 3))
@@ -633,13 +674,13 @@ class eight_pixel_data_analyzer:
 
             return R_sh, R_s
 
-        # df_1
+        # Extracting parameters, if there is valid data in the first scan
         if self.df_1_valid:
             df_1_params = parse_parameters(1)
             assign_metrics('df_1', df_1_params)
             self.df_1_rsh, self.df_1_rs = calculate_resistances(self.df_1)
 
-        # df_2
+        # Extracting parameters, if there is a second scan
         if self.df_2_valid:
             df_2_params = parse_parameters(2)
             assign_metrics('df_2', df_2_params)
@@ -655,6 +696,7 @@ class eight_pixel_data_analyzer:
         fig, ax1 = plt.subplots()  # Create figure and primary y-axis
         ax2 = ax1.twinx()  # Always create ax2 (for the secondary axis)
 
+        # Plot df1 if it exists and has required columns
         if self.df_1_valid:            
             # Plot J-V curve
             ax1.plot(self.df_1['Voltage (V)'], self.df_1['Current density (mA/cm²)'], label= f'J-V {'(fwd)' if 'Forward' in self.direction[:7] else '(rv)'}', color='#66b3ff')
@@ -712,7 +754,7 @@ class eight_pixel_data_analyzer:
         bbox_to_anchor=(0.5, 1.2),  # Adjust legend position
         fontsize=9,  # Smaller font size for legend
         borderpad=0.7,  # Reduce padding inside the legend box
-        frameon=False,  # Remove legend border (optional)
+        frameon=False,  # Remove legend border
         ncol=num_columns  # Split into two rows
         )
 
@@ -730,6 +772,7 @@ class eight_pixel_data_analyzer:
     
     def construct_table(self):
         """Constructing a table from key photovoltaic parameters in the data."""
+
         # Initialize table headers
         table = [["Parameter", "Units"]]
 
@@ -795,7 +838,7 @@ class eight_pixel_data_analyzer:
         return hi_value
     
     def _validate_data(self):
-        """Check if the dataframe contains valid I-V measurement data."""
+        """Check if the dataframe contains valid J-V measurement data."""
         self.df_1_valid = self.df_1 is not None and not self.df_1.empty
         self.df_2_valid = self.df_2 is not None and not self.df_2.empty
     
@@ -837,44 +880,54 @@ class eight_pixel_data_analyzer:
         if self.df_2_valid:
             self.df_2 = process_df(self.df_2)
 
-class eight_pixel_sample_analyzer:
-    """Class to analyze whole PV measurements for 2-Pixel data."""
+class EightPixelSampleAnalyzer:
+    """
+    Aggregates and analyzes performance metrics across all pixels of an 8-pixel sample.
+
+    Responsibilities:
+    - Classify performance CSVs into light and dark measurement sets based on header metadata.
+    - Parse each CSV to extract key photovoltaic parameters (Jsc, Voc, FF, PCE).
+    - Store forward, reverse, and combined metric lists in MeasurementResults containers.
+    - Provide aggregated data for boxplots.
+    """
     
     def __init__(self, file_path_list):
-        self.file_path_list = file_path_list
+        self.file_path_list = file_path_list # List of all JV/performance CSV file paths for this sample
         
-        # Initialize structured results storage
+        # Initialize containers for forward, reverse, and combined metrics
         self.isc = MeasurementResults([], [], [])  # Short-circuit current density
         self.voc = MeasurementResults([], [], [])  # Open-circuit voltage
         self.ff = MeasurementResults([], [], [])   # Fill factor
         self.pce = MeasurementResults([], [], [])  # Power conversion efficiency
-        self.classify_performance_files_by_light_intensity()
-        self._analyze_sample()
+        self.classify_performance_files_by_light_intensity() # Split files into dark vs. light based on metadata inside each CSV
+        self._analyze_sample() # Extract Jsc, Voc, FF, PCE from each classified file
     
     def _analyze_sample(self):
         """Extract the performance data from all provided performance csv files."""
         
         def extract_parameters(row):
+            # Parse a comma-separated metadata line into individual fields
             return [param.strip() for param in row.split(',')]
 
         def store_values(direction, params):
-            isc_val = round(float(params[4]), 3)
+            # Map parsed parameters into MeasurementResults by scan direction
+            jsc_val = round(float(params[4]), 3)
             voc_val = round(float(params[3]), 3)
             ff_val  = round(float(params[5]), 3)
             pce_val = round(float(params[7]), 3)
 
             if direction in [0, 2]:
-                self.isc.fw.append(isc_val)
+                self.isc.fw.append(jsc_val)
                 self.voc.fw.append(voc_val)
                 self.ff.fw.append(ff_val)
                 self.pce.fw.append(pce_val)
             else:
-                self.isc.rv.append(isc_val)
+                self.isc.rv.append(jsc_val)
                 self.voc.rv.append(voc_val)
                 self.ff.rv.append(ff_val)
                 self.pce.rv.append(pce_val)
 
-            self.isc.all.append(isc_val)
+            self.isc.all.append(jsc_val)
             self.voc.all.append(voc_val)
             self.ff.all.append(ff_val)
             self.pce.all.append(pce_val)
@@ -882,16 +935,16 @@ class eight_pixel_sample_analyzer:
         for file_path in self.light_files:
             df = pd.read_csv(file_path, encoding='latin1', sep=';')
 
-            # Locate performance parameters
+            # Locate the row immediately following '#Vmpp' marker for performance values
             row_number = df[df.iloc[:, 0].str.contains('#Vmpp', na=False)].index[0]
             params = extract_parameters(df.iloc[row_number + 1, 0])
 
-            # Extract scan direction
+            # Extract scan direction (0–3) from the '#direction:' metadata line
             direction_text = df[df.iloc[:, 0].str.contains(r'#direction:', na=False)].iloc[0, 0]
             match = re.search(r'#direction:\t(\d+)', direction_text)
             direction_value = int(match.group(1)) if match else None
 
-            if direction_value is None:
+            if direction_value is None: # Skip if direction metadata could not be parsed
                 continue
 
             store_values(direction_value, params)
@@ -905,11 +958,16 @@ class eight_pixel_sample_analyzer:
                     store_values(1, params2)  # treat second as reverse
     
     def classify_performance_files_by_light_intensity(self):
+        ''' Extracting the light intensity from the performance data csv and
+            classifying the csv files into dark and light measurements
+        '''
+        # Prepare separate lists for light- and dark-measurement files
         self.light_files = []
         self.dark_files = []
 
         for path in self.file_path_list:
             try:
+                # Read metadata row to determine light intensity setting
                 df = pd.read_csv(path, encoding='latin1', sep=';')
                 light_row = df[df.iloc[:, 0].str.contains('Light intensity', na=False)]
                 if light_row.empty:
@@ -918,11 +976,12 @@ class eight_pixel_sample_analyzer:
                 match = re.search(r'\[(\d+(?:\.\d+)?)', light_text)
                 light_intensity = float(match.group(1)) if match else None
 
-                if light_intensity is not None:
+                if light_intensity is not None: # Classify files: zero intensity → dark, non-zero → light
                     if light_intensity == 0:
                         self.dark_files.append(path)
                     elif light_intensity > 0:
                         self.light_files.append(path)
             except Exception as e:
+                # If file can’t be read or parsed, skip and log the failure
                 print(f"Failed to classify file {path}: {e}")
                 continue

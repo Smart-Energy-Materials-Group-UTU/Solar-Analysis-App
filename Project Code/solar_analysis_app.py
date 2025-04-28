@@ -1,5 +1,5 @@
 from tkinter import filedialog, messagebox
-from pdf_modifications import PVReportGenerator_2_Pixel, PVReportGenerator_8_Pixel  # Import your class
+from pdf_modifications import TwoPixelReportGenerator, EightPixelReportGenerator
 import random
 import pandas as pd
 import re
@@ -12,50 +12,68 @@ import os
 from collections import defaultdict
 
 class SolarAnalysisApp:
-    '''Class to handle the application'''
+    """GUI application for processing and 
+    analyzing photovoltaic solar measurement data.
+    
+    Responsibilities:
+    - Provide a user interface for selecting 2-pixel Excel files or 8-pixel data folders.
+    - Collect experiment metadata (experimenter name, date, scan rate, sun intensity, temperature).
+    - Validate and check the structure of selected Excel templates.
+    - Orchestrate generation of PDF reports for both 2-pixel and 8-pixel devices.
+    - Manage application state by showing/hiding UI sections based on user selection.
+    - Display status messages and errors via dialog boxes for a clear user experience.
+    """
+
     def __init__(self, root):
 
         # Create the main window
         self.root = root
         self.root.title("Reporting Utility for Solar Logging and Analysis of Numerical data PRO")
 
-        # Initialize variables
+        # StringVar for tracking the selected 2-pixel Excel file path
         self.selected_file = tk.StringVar()
-        self.selected_8_pixel_folder = None
-        self.jv_file_paths = {}  # <-- Initialize as empty dict
 
-        # Setup the application
-        self._setup_logo()
+        # Holds the base folder path for 8-pixel data (set after folder selection)
+        self.selected_8_pixel_folder = None
+
+        self.jv_file_paths = {}  # Dictionary to store JV file paths for 8-pixel analysis
+
+        # Build all UI sections (logo, welcome text, selection buttons, data entry, file/folder pickers, action buttons, footer)
+        self._setup_logo() # Setup top banner and description
         self._setup_welcome_section()
-        self._setup_selection_buttons()
-        self._setup_experimenter_info()
+        self._setup_selection_buttons() # Setup device‐type selection controls
+        self._setup_experimenter_info() # Setup metadata input sections (experimenter name, date, scan parameters)
         self._setup_date_section()
         self._setup_metadata_section()
-        self._setup_file_section_2_pixel()
-        self._setup_action_buttons()
-        self._setup_footer()
-        self._setup_folder_section_8_pixel()
+        self._setup_file_section_2_pixel() # Setup file chooser for 2-pixel mode
+        self._setup_action_buttons() # Setup action buttons (Generate/Check)
+        self._setup_footer() # Setup footer
+        self._setup_folder_section_8_pixel() # Setup folder chooser for 8-pixel mode
 
-        # Hide all sections initially
+        # Hide UI sections until a device type (2-pixel or 8-pixel) is selected
         self.hide_all_sections()
 
     def _setup_logo(self):
         """Setup the application logo"""
+
         self.base_dir = Path(__file__).parent.parent
-        data_file = self.base_dir / "Images/smat_logo_png.png"
+        logo_path = self.base_dir / "Images/smat_logo_png.png" # Constructing the path of the logo 
         
+        # Load and display application logo; fallback to console warning if missing
         try:
-            icon = Image.open(data_file)
+            icon = Image.open(logo_path)
             icon = icon.resize((75, 96), Image.Resampling.LANCZOS)
             icon = ImageTk.PhotoImage(icon)
             icon_label = tk.Label(self.root, image=icon)
             icon_label.image = icon  # Keep a reference
             icon_label.pack()
+
         except FileNotFoundError:
             print("Logo icon not found.")
 
     def _setup_welcome_section(self):
         """Setup welcome message and description"""
+
         welcome_label = tk.Label(
             self.root, 
             text="Welcome to R.U.S.L.A.N. PRO", 
@@ -79,9 +97,12 @@ class SolarAnalysisApp:
 
     def _setup_selection_buttons(self):
         """Setup the 2-pixel and 8-pixel selection buttons"""
+
+        # Create frame to hold pixel selection buttons
         self.selection_frame = tk.Frame(self.root)
         self.selection_frame.pack(pady=5)
 
+        # Define button for 2-pixel solar cell analysis
         two_pixel_button = tk.Button(
             self.selection_frame, 
             text="2-Pixel", 
@@ -96,6 +117,7 @@ class SolarAnalysisApp:
         )
         two_pixel_button.pack(side="left", padx=20, pady=10)
 
+        # Define button for 8-pixel solar cell analysis
         eight_pixel_button = tk.Button(
             self.selection_frame, 
             text="8-Pixel", 
@@ -112,6 +134,8 @@ class SolarAnalysisApp:
 
     def _setup_experimenter_info(self):
         """Setup experimenter name entry"""
+
+        # Create frame and entry widget for experimenter name
         self.name_frame = tk.Frame(self.root)
         self.name_frame.pack(pady=10)
 
@@ -131,6 +155,8 @@ class SolarAnalysisApp:
     
     def _setup_date_section(self):
         """Setup experiment date section"""
+
+        # Create frame and date picker for measurement date
         self.date_frame = tk.Frame(self.root)
         tk.Label(
             self.date_frame, 
@@ -148,8 +174,11 @@ class SolarAnalysisApp:
 
     def _setup_metadata_section(self):
         """Setup metadata entries (scan rate, sun intensity, temperature)"""
+        
+        # Create frame and entry widgets for measurement metadata
         self.metadata_frame = tk.Frame(self.root)
 
+        # Scan Rate input
         tk.Label(
             self.metadata_frame, 
             text="Scan Rate (V/s):", 
@@ -162,6 +191,7 @@ class SolarAnalysisApp:
         )
         self.scan_rate_entry.grid(row=0, column=1, padx=5)
 
+        # Sun Intensity input
         tk.Label(
             self.metadata_frame, 
             text="Sun Intensity (W/m²):", 
@@ -174,6 +204,7 @@ class SolarAnalysisApp:
         )
         self.sun_intensity_entry.grid(row=1, column=1, padx=5)
 
+        # Temperature input
         tk.Label(
             self.metadata_frame, 
             text="Temperature (°C):", 
@@ -185,43 +216,57 @@ class SolarAnalysisApp:
             width=10
         )
         self.temp_entry.grid(row=2, column=1, padx=5)
+
+        self.metadata_frame.pack(pady=10)
     
     def _setup_file_section_2_pixel(self):
         """Setup file selection sections for both 2-pixel and 8-pixel modes"""
-        # 2-Pixel file section
-        self.file_section = tk.Frame(self.root)
+
+        # Create frame for 2-pixel file selection
+        self.file_selection_frame  = tk.Frame(self.root)
+
+        # StringVar to track the selected file path
         self.selected_file = tk.StringVar()
         self.file_label = tk.Label(
-            self.file_section, 
+            self.file_selection_frame , 
             text="No file selected", 
             font=("Arial", 10), 
             fg="red"
         )
+
+        # Label to display selected file status
         self.file_label.pack(pady=5)
 
-        choose_button = tk.Button(
-            self.file_section, 
+        # Button to trigger file chooser dialog
+        choose_file_button  = tk.Button(
+            self.file_selection_frame , 
             text="Choose File", 
             command=lambda: self.choose_file()
         )
-        choose_button.pack(pady=5)
+        choose_file_button.pack(pady=5)
         
     def _setup_folder_section_8_pixel(self):
         """Setup folder selection section for 8-pixel mode"""
-        self.folder_section = tk.Frame(self.root)
+        
+        # Create frame for 8-pixel folder selection
+        self.folder_selection_frame = tk.Frame(self.root)
+
+        # StringVar to track the selected folder path
         self.selected_folder = tk.StringVar()
         self.selected_folder.set("No folder selected")
 
+        # Label that dynamically shows selected folder path
         self.folder_label = tk.Label(
-            self.folder_section,
+            self.folder_selection_frame,
             textvariable=self.selected_folder,
             font=("Arial", 10),
             fg="red"
         )
         self.folder_label.pack(pady=5)
 
+        # Button to open folder chooser dialog for 8-pixel measurements
         choose_folder_button = tk.Button(
-            self.folder_section,
+            self.folder_selection_frame,
             text="Choose Folder",
             command=lambda: self.choose_8_pixel_folder()
         )
@@ -229,15 +274,19 @@ class SolarAnalysisApp:
     
     def choose_8_pixel_folder(self):
         """Prompt the user to select the base folder for 8-pixel data"""
+
+        # Open folder selection dialog for user
         folder_path = filedialog.askdirectory(title="Select Base Folder for 8-Pixel Measurements")
         
+        # If folder selected, update label and collect sample information
         if folder_path:
             self.selected_8_pixel_folder = folder_path
             self.selected_folder.set(f"Selected 8-pixel folder:\n{folder_path}")
             self.folder_label.config(fg="green")  # Change text color to green
             self.extract_sample_names()
             self.collect_jv_file_paths()  # <- collect CSV file paths
-        else:
+        
+        else: # If no folder selected, reset UI and internal variables
             self.selected_folder.set("No folder selected")
             self.selected_8_pixel_folder = None
             self.folder_label.config(fg="red")  # Reset text color to red (or any color you want)
@@ -245,15 +294,21 @@ class SolarAnalysisApp:
     def extract_sample_names(self):
         """Extract unique sample names and pixel counts from folder names like 'sample X[1]' """
 
+        # Ensure a folder has been selected before proceeding
         if not hasattr(self, 'selected_8_pixel_folder') or not self.selected_8_pixel_folder:
-            print("No folder selected.")
+            print("[ERROR] No folder selected for 8-pixel analysis. Operation aborted.")
             return
 
+        # List all folders in the selected base directory
         folder_names = sorted(os.listdir(self.selected_8_pixel_folder))
+
+        # Regex pattern to match folders with format: 'SampleName[PixelNumber]'
         sample_pixel_pattern = re.compile(r'^(.*)\[(\d+)\]$')  # Match 'sample name[1]'... 'sample name[8]'
 
+        # Dictionary to count number of pixels per sample
         sample_counter = defaultdict(int)
-
+        
+        # Iterate through folders and extract sample names and pixel counts
         for folder in folder_names:
             full_path = os.path.join(self.selected_8_pixel_folder, folder)
             if os.path.isdir(full_path):
@@ -262,70 +317,84 @@ class SolarAnalysisApp:
                     sample_name = match.group(1).strip()
                     sample_counter[sample_name] += 1
         
+        # Handle case where no valid sample folders were found
         if not sample_counter:
             # No matching folders found – update GUI and abort
             self.selected_folder.set("No valid sample folders found (e.g., 'sample X[1]') in the selected directory.")
             self.folder_label.config(fg="red")
-            self.sample_info = ()
+            self.sample_pixel_counts  = ()
+            print(f"[ERROR] No valid sample folders found in {self.selected_8_pixel_folder}. Expected folder format: 'SampleName[PixelNumber]'.")
+
             return
         
-        self.sample_info = tuple((name, count) for name, count in sorted(sample_counter.items()))
-        print(f"Sample info: {self.sample_info}")       
+        # Save extracted sample information as a tuple of (sample name, pixel count)
+        self.sample_pixel_counts  = tuple((name, count) for name, count in sorted(sample_counter.items()))
+        print(f"Sample info: {self.sample_pixel_counts }")       
           
     def collect_jv_file_paths(self):
         """Collect all CSV file paths ending with 'Perform parallel JV.csv' from each sample's pixel folders."""
         
+        # Helper function to apply natural sorting (e.g., 1,2,10 instead of 1,10,2)
         def natural_sort_key(s):
             """Natural sort key function for sorting strings with numbers."""
             return [int(text) if text.isdigit() else text.lower() 
                     for text in re.split('([0-9]+)', s)] 
-    
-        if not hasattr(self, 'sample_info') or not self.sample_info:
-            print("No sample info available.")
+
+        # Ensure sample information and base folder are available before proceeding
+        if not hasattr(self, 'sample_pixel_counts') or not self.sample_pixel_counts:
+            print(f"[ERROR] No sample information extracted from selected base folder: {self.selected_8_pixel_folder}")
             return
 
         if not hasattr(self, 'selected_8_pixel_folder') or not self.selected_8_pixel_folder:
-            print("No base folder selected.")
+            print("[ERROR] No folder selected for 8-pixel analysis. Operation aborted.")
             return
 
-        self.jv_file_paths = {}
+        self.jv_file_paths = {} # Dictionary to map each sample to its pixel JV file paths
 
-        for sample_name, pixel_count in self.sample_info:
+        self.target_jv_filename = "Perform parallel JV.csv"
+
+        # Iterate over each sample and its pixel count
+        for sample_name, pixel_count in self.sample_pixel_counts:
             pixel_files = {}
 
             for pixel_num in range(1, pixel_count + 1):
+                # Build full path to each pixel folder (e.g., 'SampleX[1]')
                 folder_name = f"{sample_name}[{pixel_num}]"
                 folder_path = os.path.join(self.selected_8_pixel_folder, folder_name)
                 folder_path = os.path.normpath(folder_path)
 
+                # Check if pixel folder exists
                 if not os.path.isdir(folder_path):
-                    print(f"Folder not found: {folder_path}")
+                    print(f"[WARNING] Folder not found: {folder_path}. Skipping this pixel.")
                     continue
 
-                matched_files = []
+                matched_jv_csv_files  = []
 
                 try:
-                    # Use natural sorting for the files
+                    # Find all CSV files ending with 'Perform parallel JV.csv' in pixel folder
                     for file_name in sorted(os.listdir(folder_path), key=natural_sort_key):
-                        if file_name.endswith("Perform parallel JV.csv"):
-                            matched_files.append(os.path.join(folder_path, file_name))
+                        if file_name.endswith(self.target_jv_filename):
+                            matched_jv_csv_files .append(os.path.join(folder_path, file_name))
                 except Exception as e:
                     messagebox.showerror(f"Error accessing folder: {folder_path}. Error: {e}")
+                    print(f"[EXCEPTION] Failed to list files in {folder_path}. Exception: {e}")
                     continue
-
-                if matched_files:
-                    pixel_files[pixel_num] = matched_files
+                
+                # Map pixel number to list of matched JV files
+                if matched_jv_csv_files :
+                    pixel_files[pixel_num] = matched_jv_csv_files
                 else:
-                    print(f"No JV CSV files found in: {folder_path}")
+                    print(f"[INFO] No JV files ending with 'Perform parallel JV.csv' found in {folder_path}. Pixel {pixel_num} skipped.")
 
+            # After processing all pixels, assign to the main dictionary
             self.jv_file_paths[sample_name] = pixel_files
 
     def _setup_action_buttons(self):
         """Setup Generate Report, Check Template buttons for 2-Pixel data and Generate report button for 8-Pixel data"""
-        self.button_frame = tk.Frame(self.root)
+        self.action_buttons_frame  = tk.Frame(self.root)
         
         self.generate_2_pixel_button = tk.Button(
-            self.button_frame, 
+            self.action_buttons_frame , 
             text="Generate Report", 
             command=lambda: self.generate_report_2_pixel(),
             fg="white", 
@@ -334,7 +403,7 @@ class SolarAnalysisApp:
         self.generate_2_pixel_button.grid(row=0, column=0, padx=5)
 
         self.check_template_button = tk.Button(
-            self.button_frame, 
+            self.action_buttons_frame , 
             text="Check Template", 
             command=lambda: self.check_template(),
             fg="white", 
@@ -391,23 +460,23 @@ class SolarAnalysisApp:
         self.hide_all_sections()
         self.date_frame.pack(pady=5)
         self.metadata_frame.pack(pady=5)
-        self.file_section.pack(pady=5)
-        self.button_frame.pack(pady=10)
+        self.file_selection_frame.pack(pady=5)
+        self.action_buttons_frame .pack(pady=10)
 
     def show_8_pixel_section(self):
         """Show 8-pixel related sections"""
         self.hide_all_sections()
-        self.folder_section.pack(pady=5)
+        self.folder_selection_frame.pack(pady=5)
         self.generate_8_pixel_button.pack(pady=10)
 
     def hide_all_sections(self):
         """Hide all optional sections"""
         self.date_frame.pack_forget()
         self.metadata_frame.pack_forget()
-        self.file_section.pack_forget()
-        self.button_frame.pack_forget()
+        self.file_selection_frame.pack_forget()
+        self.action_buttons_frame.pack_forget()
         self.generate_8_pixel_button.pack_forget()
-        self.folder_section.pack_forget()
+        self.folder_selection_frame.pack_forget()
 
     def choose_file(self):
         '''Function to handle file selection for 2-Pixel cells (does NOT generate report automatically)'''
@@ -427,7 +496,7 @@ class SolarAnalysisApp:
         try:
             # Load the workbook with openpyxl (this preserves formulas)
             wb = load_workbook(file_path, data_only=False)
-            xls = pd.ExcelFile(file_path)
+            excel_file = pd.ExcelFile(file_path)
             sheet_names = wb.sheetnames
 
             # Dynamically Generate Expected Sheet Names Based on Existing Sheets
@@ -471,8 +540,8 @@ class SolarAnalysisApp:
             missing_columns_dict = {}
             
             # Step 2: Check Column Names in Each Sheet
-            for sheet in xls.sheet_names:
-                df = pd.read_excel(xls, sheet_name=sheet)
+            for sheet in excel_file.sheet_names:
+                df = pd.read_excel(excel_file, sheet_name=sheet)
                 missing_columns = [col for col in required_columns if col not in df.columns]
                 if missing_columns:
                     missing_columns_dict[sheet] = missing_columns
@@ -558,7 +627,7 @@ class SolarAnalysisApp:
 
         messagebox.showinfo("Generating Report", f"{quote}\n\nGenerating report for {experimenter} using file {file_path}")
 
-        report_generator = PVReportGenerator_2_Pixel(file_path, experimenter, metadata)
+        report_generator = TwoPixelReportGenerator(file_path, experimenter, metadata)
         report_generator.save_pdf()  # Call the save_pdf method to generate the report
 
     def generate_report_8_pixel(self):
@@ -590,7 +659,7 @@ class SolarAnalysisApp:
 
         messagebox.showinfo("Generating Report", f"{quote}\n\nGenerating report for {experimenter} using file directory {self.selected_8_pixel_folder}")
 
-        report_generator = PVReportGenerator_8_Pixel(self.jv_file_paths, experimenter)
+        report_generator = EightPixelReportGenerator(self.jv_file_paths, experimenter)
         report_generator.save_pdf()  # Call the save_pdf method to generate the report
 
     def open_website(self):
@@ -603,6 +672,6 @@ class SolarAnalysisApp:
 
         data_file = os.path.join(self.base_dir, 'Instructions.pdf')
         if os.path.exists(data_file):
-            os.startfile(data_file)  # This works on Windows
+            os.startfile(data_file)  # This works only in Windows
         else:
             print(f"Error: {data_file} not found")
