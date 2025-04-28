@@ -1,20 +1,13 @@
 # Data files (ignore large or non-essential data)
 Data/
 
-# Device-related PDFs
-Devices/
 
 # Images used in the software
 Images/
 
-# Main Panel Evolution screenshots
-Main Panel Evolution/
 
 # Generated plots (can be deleted after report generation)
 Plots/
-
-# Personal pictures
-Pics/
 
 # Project code (ignore compiled Python files)
 Project Code/__pycache___/
@@ -28,12 +21,6 @@ thesis/
 # Required environment file
 !requirements.txt
 
-# Research papers (moving out of the directory)
-RP/
-
-# Files you're planning to remove later
-Thesis, main concepts.docx
-Work Diary.docx
 
 # Ignore all log files
 *.log
@@ -41,6 +28,7 @@ Work Diary.docx
 # Ignore .pyc and pyo files
 *.pyc
 *.pyo
+
 # Ignore launch files
 launch.bat
 launch.sh
