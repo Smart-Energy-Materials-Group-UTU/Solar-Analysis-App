@@ -1,0 +1,22 @@
+#ID:	1
+#type:	Perform parallel JV
+#start_time:	16/04/2025 16.42.39
+#
+# Parameters
+#Sample area:	0.25 cm²
+#Comment:	  
+#Resolution of the measurement unit:	10 (higher better/slower)
+#start_voltage:	-0.2 V
+#stop_voltage:	1.4 V
+#Scan rate:	10 mV/s
+#settling_time:	10 ms
+#direction:	3 0=forward,1=backward,2=for- & backward,3=back- & forward
+##Sample holder climate : temperature:	[21.486,21.627] °C
+##Sample holder climate : relative humidity:	[38.921,38.428] %
+##IR temperature [0]:	[21.33,23.33] °C
+##Stage temperature:	[21.3819,21.4165] °C
+##Light intensity:	[0,0] %
+#
+#Vmpp (V),Impp (mA),MPP (mW),Voc (V),Isc (mA),FF (%),hyst (%),PCE (%)
+1.30217,-0.000418974,-0.000545575,-0.0514187,-3.23662E-5,32782.4,NaN,Inf
+1.25672,-0.000408853,-0.000513816,-0.0657245,-2.16316E-5,36140.4,0,Inf

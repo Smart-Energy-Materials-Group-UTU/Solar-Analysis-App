@@ -1,0 +1,24 @@
+#ID:	4
+#type:	Stressing
+#start_time:	16/04/2025 17.48.52
+#
+# Parameters
+#Sample area:	0.25 cm²
+#Comment:	  
+#Resolution of the measurement unit:	10 (higher better/slower)
+#wait_duration:	1 min
+#point_rate:	2 1/s
+#point_spacing:	0 linear
+#setpoint:	Inf W
+##Sample holder climate : temperature:	[29.964,29.099] °C
+##Sample holder climate : relative humidity:	[32.155,32.667] %
+##IR temperature [0]:	[31.53,29.85] °C
+##Stage temperature:	[30.2538,29.3448] °C
+##Light intensity:	[0,0] %
+#Power:	-0.000726376 mW
+#Current:	0.000484303 mA
+#Voltage:	-1.49984 V
+#
+#time (s),Sample holder climate : temperature (°C),Sample holder climate : relative humidity (%),IR temperature [0] (K),Stage temperature (°C),Light intensity (%)
+1.15087,0,0,0,0,0
+61.3322,0,0,0,0,0

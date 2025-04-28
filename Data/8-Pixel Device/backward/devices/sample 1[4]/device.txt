@@ -1,0 +1,4 @@
+Imax forward:	0.05 mA
+Surface area:	2.5E-5 mm²
+Vmax:	1.5 V
+Vmin:	-1.5 V

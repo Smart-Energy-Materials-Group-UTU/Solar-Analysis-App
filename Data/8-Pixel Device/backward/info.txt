@@ -1,0 +1,6 @@
+software:	Litos Lite
+sw_version:	2.0.2.322
+format_version:	1
+user:	
+comment:	
+export_time:	16/04/2025 17.52.15

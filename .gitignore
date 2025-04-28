@@ -1,19 +1,5 @@
-# Data files (ignore large or non-essential data)
-Data/
-
-
-# Images used in the software
-Images/
-
-
-# Generated plots (can be deleted after report generation)
-Plots/
-
 # Project code (ignore compiled Python files)
 Project Code/__pycache___/
-
-# Generated reports (can be deleted)
-Reports/
 
 # Python environment-related files
 thesis/
@@ -21,20 +7,9 @@ thesis/
 # Required environment file
 !requirements.txt
 
-
 # Ignore all log files
 *.log
 
 # Ignore .pyc and pyo files
 *.pyc
 *.pyo
-
-# Ignore launch files
-launch.bat
-launch.sh
-
-# Ignore README.md
-README.md
-
-# Ignore instructions
-Instructions.docx
