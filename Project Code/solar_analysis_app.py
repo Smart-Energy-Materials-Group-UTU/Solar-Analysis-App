@@ -41,8 +41,8 @@ class SolarAnalysisApp:
 
     def _setup_logo(self):
         """Setup the application logo"""
-        base_dir = Path(__file__).parent.parent
-        data_file = base_dir / "Images/smat_logo_png.png"
+        self.base_dir = Path(__file__).parent.parent
+        data_file = self.base_dir / "Images/smat_logo_png.png"
         
         try:
             icon = Image.open(data_file)
@@ -239,9 +239,9 @@ class SolarAnalysisApp:
             self.collect_jv_file_paths()  # <- collect CSV file paths
         else:
             self.selected_folder.set("No folder selected")
-            self.selected_8_pixel_folder = None       
-
-
+            self.selected_8_pixel_folder = None
+            self.folder_label.config(fg="red")  # Reset text color to red (or any color you want)
+     
     def extract_sample_names(self):
         """Extract unique sample names and pixel counts from folder names like 'sample X[1]' """
 
@@ -362,14 +362,29 @@ class SolarAnalysisApp:
         )
         footer_label.pack(side="bottom", pady=5)
 
+        footer_button_frame = tk.Frame(self.root)
+
+        # Website Button
         website_button = tk.Button(
-            self.root, 
+            footer_button_frame, 
             text="Visit SMAT Research Group", 
             fg="blue", 
             cursor="hand2", 
-            command= lambda: self.open_website()
+            command=lambda: self.open_website()
         )
-        website_button.pack(side='bottom', pady=5)
+        website_button.grid(row=0, column=0, padx=5)
+
+        # Instructions Button placed on the right side of the website button
+        instructions_button = tk.Button(
+            footer_button_frame, 
+            text="Open Instructions",
+            fg="orange", 
+            cursor="hand2", 
+            command=self.open_instructions
+        )
+        instructions_button.grid(row=0, column=1, padx=5)
+
+        footer_button_frame.pack(side="bottom", pady=5)
 
     def show_2_pixel_section(self):
         """Show 2-pixel related sections"""
@@ -425,6 +440,17 @@ class SolarAnalysisApp:
                         expected_order.append(f"{num}-{side}-{cycle}")
 
             # Step 1: Check Sheet Name Format and Order
+            missing_sheets = set(expected_order) - set(sheet_names)
+            unexpected_sheets = set(sheet_names) - set(expected_order)
+
+            if missing_sheets:
+                messagebox.showerror("Error", f"Missing sheets:\n" + "\n".join(sorted(missing_sheets)))
+                return
+
+            if unexpected_sheets:
+                messagebox.showerror("Error", f"Unexpected sheets found:\n" + "\n".join(sorted(unexpected_sheets)))
+                return
+            
             sheet_errors = []
 
             for i, sheet in enumerate(sheet_names):
@@ -567,8 +593,16 @@ class SolarAnalysisApp:
         report_generator = PVReportGenerator_8_Pixel(self.jv_file_paths, experimenter)
         report_generator.save_pdf()  # Call the save_pdf method to generate the report
 
-    # Add a clickable website link
     def open_website(self):
         '''Add a clickable website link'''
         import webbrowser
         webbrowser.open("https://sites.utu.fi/smat/")
+
+    def open_instructions(self):
+        """Open the instructions PDF"""
+
+        data_file = os.path.join(self.base_dir, 'Instructions.pdf')
+        if os.path.exists(data_file):
+            os.startfile(data_file)  # This works on Windows
+        else:
+            print(f"Error: {data_file} not found")

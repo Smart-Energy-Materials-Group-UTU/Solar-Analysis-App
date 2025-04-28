@@ -605,13 +605,18 @@ class eight_pixel_data_analyzer:
             R_sh, R_s = None, None
 
             # Shunt Resistance near Voc=0V
-            near_jsc = df[(df['Voltage (V)'].between(-0.02, 0.02))].copy()
+            near_jsc = df[(df['Voltage (V)'].between(-0.1, 0.1))].copy()
             near_jsc_avg = near_jsc.groupby('Voltage (V)')['Current density (mA/cm²)'].mean().reset_index()
             if len(near_jsc_avg) > 1:
                 near_jsc_avg['J_A_cm2'] = near_jsc_avg['Current density (mA/cm²)'] * 1e-3
                 slope, *_ = stats.linregress(near_jsc_avg['Voltage (V)'], near_jsc_avg['J_A_cm2'])
                 if abs(slope) > epsilon:
                     R_sh = round(1 / abs(slope), 3)
+                else:
+                    print("[WARNING] Slope near Voc=0V is too small (|slope| <= epsilon). Cannot calculate R_shunt.")
+            else:
+                print(f"[WARNING] Not enough points between +/-0.1 to calculate R_shunt (found {len(near_jsc_avg)} points).")
+
 
             # Series Resistance near J=0 mA/cm²
             near_voc = df[(df['Current density (mA/cm²)'].between(-1, 1))].copy()
@@ -621,6 +626,10 @@ class eight_pixel_data_analyzer:
                 slope, *_ = stats.linregress(near_voc_avg['J_A_cm2'], near_voc_avg['Voltage (V)'])
                 if abs(slope) > epsilon:
                     R_s = round(abs(slope), 3)
+                else:
+                    print("[WARNING] Slope near J=0 mA/cm² is too small (|slope| <= epsilon). Cannot calculate R_series.")
+            else:
+                print(f"[WARNING] Not enough points between +/-1 mA/cm² to calculate R_series (found {len(near_voc_avg)} points).")
 
             return R_sh, R_s
 

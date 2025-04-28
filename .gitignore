@@ -47,3 +47,6 @@ launch.sh
 
 # Ignore README.md
 README.md
+
+# Ignore instructions
+Instructions.docx
