@@ -10,6 +10,8 @@ from PIL import Image, ImageTk
 from tkcalendar import DateEntry
 import os
 from collections import defaultdict
+import platform
+import subprocess
 
 class SolarAnalysisApp:
     """GUI application for processing and 
@@ -671,7 +673,14 @@ class SolarAnalysisApp:
         """Open the instructions PDF"""
 
         data_file = os.path.join(self.base_dir, 'Instructions.pdf')
+        
         if os.path.exists(data_file):
-            os.startfile(data_file)  # This works only in Windows
+            # Check the operating system
+            if platform.system() == "Windows":
+                os.startfile(data_file)  # Works only on Windows
+            elif platform.system() == "Darwin":  # macOS
+                subprocess.call(["open", data_file])
+            else:  # Linux or others
+                subprocess.call(["xdg-open", data_file])
         else:
             print(f"Error: {data_file} not found")
