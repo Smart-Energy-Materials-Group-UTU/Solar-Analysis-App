@@ -1,16 +1,15 @@
 # Solar Analysis Project
-
-This project is designed to analyze solar cell data, process photovoltaic parameters, and generate reports using Python. It utilizes a virtual environment to manage dependencies, ensuring a consistent setup across different systems.
+This thesis project is designed to analyze solar cell data, process photovoltaic parameters, and generate reports using Python. It utilizes a virtual environment to manage dependencies, ensuring a consistent setup across different systems.The thesis project was financed by SMAT Research group at University of Turku and was made by Ruslan Hasanov.
 
 ## Features
-**Data Analysis**: Analyze photovoltaic measurement data from solar cells.
-**Report Generation**: Create PDF reports with results and graphs.
-**Virtual Environment**: Ensures proper package installation without system-wide impact.
+ **Data Analysis**: Analyze photovoltaic measurement data from solar cells.
+ **Report Generation**: Create PDF reports with results and graphs.
+ **Virtual Environment**: Ensures proper package installation without system-wide impact.
 
 ## Requirements
-**Python**: Python 3.6 or higher
-**Operating System**: Windows or macOS
-**Dependencies**: Listed in requirements.txt
+ **Python**: Python 3.6 or higher
+ **Operating System**: Windows or macOS
+ **Dependencies**: Listed in requirements.txt
 
 ## Installation
 ### 1. Clone the Repository
@@ -100,3 +99,9 @@ pip install -r requirements.txt
 ```
 ## Contributing
 If you'd like to contribute to the project, feel free to fork the repository, make changes, and submit a pull request.
+
+## License and Branding Notice
+
+This project is licensed under the GNU General Public License v3.0.
+However, all branding elements—such as the application name, logos, and visual styling in the `Images/` folder—are protected and may not be modified or reused without explicit permission from the author.
+Please respect the integrity of the original branding when redistributing or modifying this software.
