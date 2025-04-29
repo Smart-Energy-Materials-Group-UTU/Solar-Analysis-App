@@ -100,3 +100,9 @@ pip install -r requirements.txt
 ```
 ## Contributing
 If you'd like to contribute to the project, feel free to fork the repository, make changes, and submit a pull request.
+
+## License and Branding Notice
+
+This project is licensed under the GNU General Public License v3.0.
+However, all branding elements—such as the application name, logos, and visual styling in the `Images/` folder—are protected and may not be modified or reused without explicit permission from the author.
+Please respect the integrity of the original branding when redistributing or modifying this software.
