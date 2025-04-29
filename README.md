@@ -2,14 +2,14 @@
 This thesis project is designed to analyze solar cell data, process photovoltaic parameters, and generate reports using Python. It utilizes a virtual environment to manage dependencies, ensuring a consistent setup across different systems.The thesis project was financed by SMAT Research group at University of Turku and was made by Ruslan Hasanov.
 
 ## Features
-**Data Analysis**: Analyze photovoltaic measurement data from solar cells.
-**Report Generation**: Create PDF reports with results and graphs.
-**Virtual Environment**: Ensures proper package installation without system-wide impact.
+### **Data Analysis**: Analyze photovoltaic measurement data from solar cells.
+### **Report Generation**: Create PDF reports with results and graphs.
+### **Virtual Environment**: Ensures proper package installation without system-wide impact.
 
 ## Requirements
-**Python**: Python 3.6 or higher
-**Operating System**: Windows or macOS
-**Dependencies**: Listed in requirements.txt
+### **Python**: Python 3.6 or higher
+### **Operating System**: Windows or macOS
+### **Dependencies**: Listed in requirements.txt
 
 ## Installation
 ### 1. Clone the Repository
