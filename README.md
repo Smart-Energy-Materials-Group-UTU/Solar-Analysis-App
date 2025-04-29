@@ -1,6 +1,5 @@
 # Solar Analysis Project
-
-This project is designed to analyze solar cell data, process photovoltaic parameters, and generate reports using Python. It utilizes a virtual environment to manage dependencies, ensuring a consistent setup across different systems.
+This thesis project is designed to analyze solar cell data, process photovoltaic parameters, and generate reports using Python. It utilizes a virtual environment to manage dependencies, ensuring a consistent setup across different systems.The thesis project was financed by SMAT Research group at University of Turku and was made by Ruslan Hasanov.
 
 ## Features
 **Data Analysis**: Analyze photovoltaic measurement data from solar cells.
