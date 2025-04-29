@@ -13,3 +13,26 @@ thesis/
 # Ignore .pyc and pyo files
 *.pyc
 *.pyo
+
+Reports/
+
+Plots/
+
+Main Panel Evolution/
+
+Images/
+
+RP/
+
+Devices/
+
+Work Diary.docx
+Thesis, main concepts.docx
+
+Instructions.docx
+
+README.md
+
+Data/
+
+Pics/
