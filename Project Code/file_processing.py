@@ -636,7 +636,8 @@ class EightPixelDataAnalyzer:
             setattr(self, f'{prefix}_voc', round(float(params[3]), 3))
             setattr(self, f'{prefix}_jsc', round(float(params[4]) / sample_area * -1, 3))
             setattr(self, f'{prefix}_ff', round(float(params[5]), 3))
-            setattr(self, f'{prefix}_pce', round(float(params[7]), 3))
+            setattr(self, f'{prefix}_hi', round(float(params[6]), 3))
+            setattr(self, f'{prefix}_pce', round(float(params[7]) * 100, 3))
 
         def calculate_resistances(df):
             """
@@ -648,6 +649,7 @@ class EightPixelDataAnalyzer:
             # Shunt Resistance near Voc=0V
             near_jsc = df[(df['Voltage (V)'].between(-0.1, 0.1))].copy()
             near_jsc_avg = near_jsc.groupby('Voltage (V)')['Current density (mA/cm²)'].mean().reset_index()
+
             if len(near_jsc_avg) > 1:
                 near_jsc_avg['J_A_cm2'] = near_jsc_avg['Current density (mA/cm²)'] * 1e-3
                 slope, *_ = stats.linregress(near_jsc_avg['Voltage (V)'], near_jsc_avg['J_A_cm2'])
@@ -697,9 +699,11 @@ class EightPixelDataAnalyzer:
         ax2 = ax1.twinx()  # Always create ax2 (for the secondary axis)
 
         # Plot df1 if it exists and has required columns
-        if self.df_1_valid:            
+        if self.df_1_valid:
+            # Decide on the color based on the direction
+            color_1 = '#66b3ff' if 'Forward' in self.direction[:7] else 'darkblue'
             # Plot J-V curve
-            ax1.plot(self.df_1['Voltage (V)'], self.df_1['Current density (mA/cm²)'], label= f'J-V {'(fwd)' if 'Forward' in self.direction[:7] else '(rv)'}', color='#66b3ff')
+            ax1.plot(self.df_1['Voltage (V)'], self.df_1['Current density (mA/cm²)'], label= f'J-V {'(fwd)' if 'Forward' in self.direction[:7] else '(rv)'}', color=color_1)
             ax1.set_xlabel("Voltage (V)", fontsize=12)  # Increased font size
             ax1.set_ylabel("Current Density (mA/cm²)", color='black', fontsize=12)  # Increased font size
             ax1.tick_params(axis='y', labelcolor='black')
@@ -707,7 +711,7 @@ class EightPixelDataAnalyzer:
             ax1.axvline(0, color='black')  # Add a horizontal line at V = 0
 
             # Plot P-V curve on a secondary axis
-            ax2.plot(self.df_1['Voltage (V)'], self.df_1['Current density (mA/cm²)'] * self.df_1['Voltage (V)'], label=f'P-V {'(fwd)' if 'Forward' in self.direction[:7] else '(rv)'}', color='#66b3ff', linestyle='--')  # Dashed line for P-V
+            ax2.plot(self.df_1['Voltage (V)'], self.df_1['Current density (mA/cm²)'] * self.df_1['Voltage (V)'], label=f'P-V {'(fwd)' if 'Forward' in self.direction[:7] else '(rv)'}', color=color_1, linestyle='--')  # Dashed line for P-V
             ax2.set_ylabel("Power Density (mW/cm²)", color='black', fontsize=12)  # Increased font size
             ax2.tick_params(axis='y', labelcolor='black')
 
@@ -720,16 +724,18 @@ class EightPixelDataAnalyzer:
             mpp_power_density = self.df_1_mpp
 
             # Plot red points at MPP
-            ax1.plot(mpp_voltage, mpp_current_density, 'o', color='#66b3ff', label=r"$J_{\mathit{mpp}}$ " + ('(fwd)' if 'Forward' in self.direction[:7] else '(rv)'))  # Red point for J-V curve
-            ax2.plot(mpp_voltage, mpp_power_density, 'o', color='#66b3ff', label=r"$P_{\mathit{mpp}}$" + ('(fwd)' if 'Forward' in self.direction[:7] else '(rv)'))  # Red point for P-V curve
+            ax1.plot(mpp_voltage, mpp_current_density, 'o', color=color_1, label=r"$J_{\mathit{mpp}}$ " + ('(fwd)' if 'Forward' in self.direction[:7] else '(rv)'))  # Red point for J-V curve
+            ax2.plot(mpp_voltage, mpp_power_density, 'o', color=color_1, label=r"$P_{\mathit{mpp}}$" + ('(fwd)' if 'Forward' in self.direction[:7] else '(rv)'))  # Red point for P-V curve
 
         # Plot df2 if it exists and has required columns
         if self.df_2_valid:
+            # Decide on the color based on the direction
+            color_2 = 'darkblue' if 'Forward' in self.direction[:7] else '#66b3ff'
             # Plot J-V curve for df2
-            ax1.plot(self.df_2['Voltage (V)'], self.df_2['Current density (mA/cm²)'], label=f'J-V {'(rv)' if 'Forward' in self.direction[:7] else '(fwd)'}', color='darkblue')
+            ax1.plot(self.df_2['Voltage (V)'], self.df_2['Current density (mA/cm²)'], label=f'J-V {'(rv)' if 'Forward' in self.direction[:7] else '(fwd)'}', color= color_2)
 
             # Plot P-V curve for df2
-            ax2.plot(self.df_2['Voltage (V)'], self.df_2['Current density (mA/cm²)'] * self.df_2['Voltage (V)'], label=f'P-V {'(rv)' if 'Forward' in self.direction[:7] else '(fwd)'}', color='darkblue', linestyle='--')
+            ax2.plot(self.df_2['Voltage (V)'], self.df_2['Current density (mA/cm²)'] * self.df_2['Voltage (V)'], label=f'P-V {'(rv)' if 'Forward' in self.direction[:7] else '(fwd)'}', color = color_2, linestyle='--')
 
             # Find and plot MPP for df2
             mpp_voltage_2 = self.df_2_mpp_voltage
@@ -737,8 +743,8 @@ class EightPixelDataAnalyzer:
             mpp_power_density_2 = self.df_2_mpp
 
             # Plot blue points at MPP
-            ax1.plot(mpp_voltage_2, mpp_current_density_2, 'bo', label=r"$J_{\mathit{mpp}}$" + ('(rv)' if 'Forward' in self.direction[:7] else '(fwd)'))
-            ax2.plot(mpp_voltage_2, mpp_power_density_2, 'bo', label=r"$P_{\mathit{mpp}}$" +  ('(rv)' if 'Forward' in self.direction[:7] else '(fwd)'))
+            ax1.plot(mpp_voltage_2, mpp_current_density_2, 'o', color = color_2, label=r"$J_{\mathit{mpp}}$" + ('(rv)' if 'Forward' in self.direction[:7] else '(fwd)'))
+            ax2.plot(mpp_voltage_2, mpp_power_density_2, 'o', color = color_2, label=r"$P_{\mathit{mpp}}$" +  ('(rv)' if 'Forward' in self.direction[:7] else '(fwd)'))
 
         # Align the 0 values of both y-axes
         ax2.set_ylim(ax1.get_ylim())
@@ -790,7 +796,7 @@ class EightPixelDataAnalyzer:
             ("Jsc","mA/cm²", self.df_1_jsc if self.df_1_valid else None, self.df_2_jsc if self.df_2_valid else None),
             ("Voc","V", self.df_1_voc if self.df_1_valid else None, self.df_2_voc if self.df_2_valid else None),
             ("Fill Factor","%", self.df_1_ff if self.df_1_valid else None, self.df_2_ff if self.df_2_valid else None),
-            ("PCE", "-", self.df_1_pce if self.df_1_valid else None, self.df_2_pce if self.df_2_valid else None),
+            ("PCE", "%", self.df_1_pce if self.df_1_valid else None, self.df_2_pce if self.df_2_valid else None),
             ("Jmp", "mA/cm²", self.df_1_mpp_current_density if self.df_1_valid else None, self.df_2_mpp_current_density if self.df_2_valid else None),
             ("Vmp", "V", self.df_1_mpp_voltage if self.df_1_valid else None, self.df_2_mpp_voltage if self.df_2_valid else None),
             ("Rsh", "Ω·cm²", self.df_1_rsh if self.df_1_valid else None, self.df_2_rsh if self.df_2_valid else None),
@@ -812,30 +818,7 @@ class EightPixelDataAnalyzer:
         if self.df_1 is None or self.df_2 is None:
             return None
         
-        # Compute PCE values directly
-        pce = self.df_1_pce
-        pce2 = self.df_2_pce
-        
-        # Check for invalid PCEs (inf, nan)
-        if not (math.isfinite(pce) and math.isfinite(pce2)):
-            return None
-
-        # Determine which scan is reverse and which is forward
-        scan_type_1 = 'Forward Scan' if 'Forward' in self.direction[:7] else 'Reverse Scan'
-
-        if scan_type_1 == "Reverse Scan":
-            pce_reverse, pce_forward = pce, pce2
-        else:
-            pce_reverse, pce_forward = pce2, pce
-
-        # Prevent division by zero
-        if pce_reverse == 0:
-            return None
-
-        # Compute HI
-        hi_value = round((pce_reverse - pce_forward) / pce_reverse, 3)
-        
-        return hi_value
+        return self.df_1_hi
     
     def _validate_data(self):
         """Check if the dataframe contains valid J-V measurement data."""
@@ -909,9 +892,9 @@ class EightPixelSampleAnalyzer:
             # Parse a comma-separated metadata line into individual fields
             return [param.strip() for param in row.split(',')]
 
-        def store_values(direction, params):
+        def store_values(direction, params, sample_area):
             # Map parsed parameters into MeasurementResults by scan direction
-            jsc_val = round(float(params[4]), 3)
+            jsc_val = round(-float(params[4])/ sample_area, 3)
             voc_val = round(float(params[3]), 3)
             ff_val  = round(float(params[5]), 3)
             pce_val = round(float(params[7]), 3)
@@ -946,16 +929,21 @@ class EightPixelSampleAnalyzer:
 
             if direction_value is None: # Skip if direction metadata could not be parsed
                 continue
+            
+            # Extract sample area from the '#Sample area:' metadata line
+            sample_area_text = df[df.iloc[:, 0].str.contains(r'#Sample area:', na=False)].iloc[0, 0]
+            match = re.search(r'#Sample area:\t([\d\.]+)', sample_area_text)
+            sample_area = float(match.group(1)) if match else None
 
-            store_values(direction_value, params)
+            store_values(direction_value, params, sample_area)
 
             # Handle additional row (if present)
             if row_number + 2 < len(df):
                 params2 = extract_parameters(df.iloc[row_number + 2, 0])
                 if direction_value == 3:
-                    store_values(0, params2)  # treat second as forward
+                    store_values(0, params2, sample_area)  # treat second as forward
                 else:
-                    store_values(1, params2)  # treat second as reverse
+                    store_values(1, params2, sample_area)  # treat second as reverse
     
     def classify_performance_files_by_light_intensity(self):
         ''' Extracting the light intensity from the performance data csv and

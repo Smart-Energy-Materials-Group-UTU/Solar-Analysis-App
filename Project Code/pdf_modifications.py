@@ -1,4 +1,4 @@
-import os
+import os, platform, subprocess, math
 from datetime import datetime
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter, A4
@@ -442,10 +442,10 @@ class EightPixelReportGenerator:
         # Calculate and display Hysteresis Index if available
         hi_value = parser.calculate_hi()
 
-        if hi_value is not None:
+        if hi_value is not None and not math.isnan(hi_value):
             # Displaying calculated HI
             self.c.setFont("Helvetica", 12)
-            page_title = f"The calculated Hysteresis Index (HI) for Pixel {px} is {hi_value}"
+            page_title = f"The calculated Hysteresis Index (HI) for Pixel {px} is {hi_value} %"
             text_width = self.c.stringWidth(page_title, "Helvetica", 12)
             left_margin = 56.7
             self.c.drawString(left_margin, table_y_position - 30, page_title)
@@ -517,12 +517,12 @@ class EightPixelReportGenerator:
         self.c.drawString(margin_x, margin_y + y_gap + 185, "(a)")
 
         # Plotting Fill Factor Values (Top-right)
-        plot = TwoPixelMeasurementAnalyzer.plot_boxplot(self.analyzed_8_pixel_sample.ff.fw, self.analyzed_8_pixel_sample.ff.rv, 'Fill Factor values', 'FF')
+        plot = TwoPixelMeasurementAnalyzer.plot_boxplot(self.analyzed_8_pixel_sample.ff.fw, self.analyzed_8_pixel_sample.ff.rv, 'Fill Factor values', 'FF (%)')
         self.c.drawImage(plot, margin_x + x_gap, margin_y + y_gap, width=plot_width, height=plot_height)
         self.c.drawString(margin_x + x_gap , margin_y + y_gap + 185, "(b)")
 
         # Plotting J sc (Bottom-left)
-        plot = TwoPixelMeasurementAnalyzer.plot_boxplot(self.analyzed_8_pixel_sample.isc.fw, self.analyzed_8_pixel_sample.isc.rv, 'Short Circuit Current Densities', 'Isc (mA)')
+        plot = TwoPixelMeasurementAnalyzer.plot_boxplot(self.analyzed_8_pixel_sample.isc.fw, self.analyzed_8_pixel_sample.isc.rv, 'Short Circuit Current Densities', 'Jsc (mA/cm²)')
         self.c.drawImage(plot, margin_x, margin_y, width=plot_width, height=plot_height)
         self.c.drawString(margin_x, margin_y + 185, "(c)")
 
@@ -540,9 +540,7 @@ class EightPixelReportGenerator:
         # Add page number and icons
         self._add_page_number()
         self._add_icons(opacity=0.5, scale=0.6)
-
-        # Increment graph count for subsequent pages
-        graph_count += 1
+        
         self.c.showPage()
 
     def save_pdf(self):
@@ -561,9 +559,21 @@ class EightPixelReportGenerator:
                     jv_data_path = files[file_index ]
                     performance_data_path = files [file_index +1]
                     self._add_sheet_results(sample, px, jv_data_path, performance_data_path, graph_count)
-
+                    graph_count +=1        # Increment graph count for subsequent pages
             self._add_box_plot_page(graph_count, performance_filepaths)
-
-        # Save PDF to disk  
+            graph_count +=1       # Increment graph count for subsequent pages
+            
+        # Save PDF to disk
         self.c.save()
         print(f"PDF generated: {self.pdf_path}")
+
+        # Automatically open the generated PDF
+        try:
+            if platform.system() == 'Darwin':  # macOS
+                subprocess.run(['open', self.pdf_path])
+            elif platform.system() == 'Windows':  # Windows
+                os.startfile(self.pdf_path)
+            else:  # Linux and others
+                subprocess.run(['xdg-open', self.pdf_path])
+        except Exception as e:
+            print(f"Could not open PDF automatically: {e}")
