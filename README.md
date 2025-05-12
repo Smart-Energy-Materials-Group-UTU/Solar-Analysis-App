@@ -1,4 +1,5 @@
 # Solar Analysis Project
+[![DOI](https://zenodo.org/badge/974171373.svg)](https://doi.org/10.5281/zenodo.15390039)
 This thesis project is designed to analyze solar cell data, process photovoltaic parameters, and generate reports using Python. It utilizes a virtual environment to manage dependencies, ensuring a consistent setup across different systems.The thesis project was financed by SMAT Research group at University of Turku and was made by Ruslan Hasanov.
 
 ## Features
@@ -105,3 +106,4 @@ If you'd like to contribute to the project, feel free to fork the repository, ma
 This project is licensed under the GNU General Public License v3.0.
 However, all branding elements—such as the application name, logos, and visual styling in the `Images/` folder—are protected and may not be modified or reused without explicit permission from the author.
 Please respect the integrity of the original branding when redistributing or modifying this software.
+
