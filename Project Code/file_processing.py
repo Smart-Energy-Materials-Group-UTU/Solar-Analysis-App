@@ -20,7 +20,7 @@ plots_dir = os.path.join(base_dir, "Plots")
 os.makedirs(plots_dir, exist_ok=True)
 
 
-class TwoPixelSampleAnalyzer:
+class TwoPixelDataAnalyzer:
     """
     Processes J–V measurement curve data for a single sample from 2-pixel Excel sheets.
 
@@ -96,8 +96,8 @@ class TwoPixelSampleAnalyzer:
             mpp_power_density = df['mW/cm²'].iloc[max_power_index]
 
             # Plot red points at MPP
-            ax1.plot(mpp_voltage, mpp_current_density, 'o', color='#66b3ff', label=r"$J_{\mathit{mpp}}$ " + ('(fwd)' if '-fw' in self.sheet_name else '(rv)'))  # Red point for J-V curve
-            ax2.plot(mpp_voltage, mpp_power_density, 'o', color='#66b3ff', label=r"$P_{\mathit{mpp}}$" + ('(fwd)' if '-fw' in self.sheet_name else '(rv)'))  # Red point for P-V curve
+            ax1.plot(mpp_voltage, mpp_current_density, 'o', color='#66b3ff', label=r"$J_{\mathit{mp}}$ " + ('(fwd)' if '-fw' in self.sheet_name else '(rv)'))  # Red point for J-V curve
+            ax2.plot(mpp_voltage, mpp_power_density, 'o', color='#66b3ff', label=r"$P_{\mathit{mp}}$" + ('(fwd)' if '-fw' in self.sheet_name else '(rv)'))  # Red point for P-V curve
 
         # Plot df2 if it exists and has required columns
         if self.df2_valid:
@@ -117,8 +117,8 @@ class TwoPixelSampleAnalyzer:
             mpp_power_density_2 = df2['mW/cm²'].iloc[max_power_index_2]
 
             # Plot blue points at MPP
-            ax1.plot(mpp_voltage_2, mpp_current_density_2, 'bo', label=r"$J_{\mathit{mpp}}$" + direction)
-            ax2.plot(mpp_voltage_2, mpp_power_density_2, 'bo', label=r"$P_{\mathit{mpp}}$" +  direction)
+            ax1.plot(mpp_voltage_2, mpp_current_density_2, 'bo', label=r"$J_{\mathit{mp}}$" + direction)
+            ax2.plot(mpp_voltage_2, mpp_power_density_2, 'bo', label=r"$P_{\mathit{mp}}$" +  direction)
 
         # Align the 0 values of both y-axes
         ax2.set_ylim(ax1.get_ylim())
@@ -246,12 +246,12 @@ class TwoPixelSampleAnalyzer:
         # Check if the first dataset is valid
         if self.df_valid:
             table[0].append("Forward Scan" if "-fw" in self.sheet_name else "Reverse Scan")
-            active_area, pce, max_voltage, max_current, mA_at_zero_voltage, V_at_zero_current, fill_factor, R_sh, R_s = TwoPixelSampleAnalyzer.extract_performance_data(self.data)
+            active_area, pce, max_voltage, max_current, mA_at_zero_voltage, V_at_zero_current, fill_factor, R_sh, R_s = TwoPixelDataAnalyzer.extract_performance_data(self.data)
         
         # Check if the second dataset is valid
         if self.df2_valid:
             table[0].append("Forward Scan" if "-fw" in self.next_sheet_name else "Reverse Scan")
-            active_area2, pce2, max_voltage2, max_current2, mA_at_zero_voltage2, V_at_zero_current2, fill_factor2, R_sh2, R_s2 = TwoPixelSampleAnalyzer.extract_performance_data(self.data2)
+            active_area2, pce2, max_voltage2, max_current2, mA_at_zero_voltage2, V_at_zero_current2, fill_factor2, R_sh2, R_s2 = TwoPixelDataAnalyzer.extract_performance_data(self.data2)
        
         # Populate the table dynamically
         params = [
@@ -724,8 +724,8 @@ class EightPixelDataAnalyzer:
             mpp_power_density = self.df_1_mpp
 
             # Plot red points at MPP
-            ax1.plot(mpp_voltage, mpp_current_density, 'o', color=color_1, label=r"$J_{\mathit{mpp}}$ " + ('(fwd)' if 'Forward' in self.direction[:7] else '(rv)'))  # Red point for J-V curve
-            ax2.plot(mpp_voltage, mpp_power_density, 'o', color=color_1, label=r"$P_{\mathit{mpp}}$" + ('(fwd)' if 'Forward' in self.direction[:7] else '(rv)'))  # Red point for P-V curve
+            ax1.plot(mpp_voltage, mpp_current_density, 'o', color=color_1, label=r"$J_{\mathit{mp}}$ " + ('(fwd)' if 'Forward' in self.direction[:7] else '(rv)'))  # Red point for J-V curve
+            ax2.plot(mpp_voltage, mpp_power_density, 'o', color=color_1, label=r"$P_{\mathit{mp}}$" + ('(fwd)' if 'Forward' in self.direction[:7] else '(rv)'))  # Red point for P-V curve
 
         # Plot df2 if it exists and has required columns
         if self.df_2_valid:
@@ -743,8 +743,8 @@ class EightPixelDataAnalyzer:
             mpp_power_density_2 = self.df_2_mpp
 
             # Plot blue points at MPP
-            ax1.plot(mpp_voltage_2, mpp_current_density_2, 'o', color = color_2, label=r"$J_{\mathit{mpp}}$" + ('(rv)' if 'Forward' in self.direction[:7] else '(fwd)'))
-            ax2.plot(mpp_voltage_2, mpp_power_density_2, 'o', color = color_2, label=r"$P_{\mathit{mpp}}$" +  ('(rv)' if 'Forward' in self.direction[:7] else '(fwd)'))
+            ax1.plot(mpp_voltage_2, mpp_current_density_2, 'o', color = color_2, label=r"$J_{\mathit{mp}}$" + ('(rv)' if 'Forward' in self.direction[:7] else '(fwd)'))
+            ax2.plot(mpp_voltage_2, mpp_power_density_2, 'o', color = color_2, label=r"$P_{\mathit{mp}}$" +  ('(rv)' if 'Forward' in self.direction[:7] else '(fwd)'))
 
         # Align the 0 values of both y-axes
         ax2.set_ylim(ax1.get_ylim())
