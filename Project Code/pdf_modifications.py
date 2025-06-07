@@ -3,7 +3,7 @@ from datetime import datetime
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter, A4
 import pandas as pd
-from file_processing import TwoPixelSampleAnalyzer, TwoPixelMeasurementAnalyzer, EightPixelDataAnalyzer, EightPixelSampleAnalyzer
+from file_processing import TwoPixelDataAnalyzer, TwoPixelMeasurementAnalyzer, EightPixelDataAnalyzer, EightPixelSampleAnalyzer
 from reportlab.platypus import Table, TableStyle
 from reportlab.lib import colors
 
@@ -129,7 +129,7 @@ class TwoPixelReportGenerator:
         page_width, page_height = A4  # Get the page dimensions
 
         # Load and validate JV + performance data for this sheet
-        self.processor = TwoPixelSampleAnalyzer(self.file_path, sheet_name, next_sheet_name=next_sheet_name)
+        self.processor = TwoPixelDataAnalyzer(self.file_path, sheet_name, next_sheet_name=next_sheet_name)
         plot = self.processor.generate_jv_graph()  # Using the method from sample_analyzer
 
         if plot is None:
